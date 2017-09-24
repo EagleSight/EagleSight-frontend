@@ -96,10 +96,8 @@ var NetworkEntity = /** @class */ (function (_super) {
         return _this;
     }
     NetworkEntity.prototype.updateFromNetwork = function (data) {
-        this.rotation.set(data.getFloat32(5), data.getFloat32(9), data.getFloat32(13));
-        this.position.x = data.getFloat32(17);
-        this.position.y = data.getFloat32(21);
-        this.position.z = data.getFloat32(25);
+        this.rotation.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
+        this.position.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
         this.updateMatrix();
     };
     return NetworkEntity;
@@ -170,14 +168,14 @@ function generateUID() {
 }
 var players = new Map(); // Contains the 
 function init() {
-    var uid = generateUID();
-    console.log(uid);
+    var localUID = generateUID();
+    console.log(localUID);
     // We just make sure that we have 8 chars in the uid
-    conn = new WebSocket('ws://127.0.0.1:8000/ws?uid=' + uid.toString());
+    conn = new WebSocket('ws://127.0.0.1:8000/ws?uid=' + localUID.toString());
     conn.binaryType = 'arraybuffer';
     scene = new THREE.Scene();
     // We add the player to the scene
-    player = new localPlayer_1.default(uid, conn);
+    player = new localPlayer_1.default(localUID, conn);
     scene.add(player);
     // We add the player to entities list
     players.set(player.uid, player);
@@ -190,25 +188,34 @@ function init() {
     // Setup network listener
     conn.onmessage = function (e) {
         var view = new DataView(e.data);
-        var uid = view.getUint32(1, true);
         switch (view.getUint8(0)) {
             case 0x1:// connection
-                if (uid != player.uid) {
-                    var newPlayer = new remotePlayer_1.default(uid);
+                if (view.getUint32(1) != player.uid) {
+                    var newPlayer = new remotePlayer_1.default(view.getUint32(1));
                     scene.add(newPlayer);
-                    players.set(uid, newPlayer);
+                    players.set(newPlayer.uid, newPlayer);
                 }
                 break;
             case 0x2:// deconnection
-                scene.remove(players.get(uid));
-                players.delete(uid);
+                scene.remove(players.get(view.getUint32(1)));
+                players.delete(view.getUint32(1));
                 break;
             case 0x3:// Entiry update
-                players.get(uid).updateFromNetwork(view);
+                // Empty
+                if (view.getUint16(1) == 0) {
+                    break;
+                }
+                // Receive a lot of updates in the same packet
+                for (var i = 0; i < view.getUint16(1); i++) {
+                    var updateFrame = new DataView(e.data, 3 + i * 28, 28);
+                    if (players.has(updateFrame.getUint32(0))) {
+                        players.get(updateFrame.getUint32(0)).updateFromNetwork(updateFrame);
+                    }
+                }
                 break;
             case 0x4:// Players list
-                for (var i = 0; i < view.getUint16(1, true); i++) {
-                    var newPlayerUID = view.getUint32(1 + 2 + i * 4, true);
+                for (var i = 0; i < view.getUint16(1); i++) {
+                    var newPlayerUID = view.getUint32(1 + 2 + i * 4);
                     var newPlayer = new remotePlayer_1.default(newPlayerUID);
                     scene.add(newPlayer);
                     players.set(newPlayerUID, newPlayer);
@@ -217,11 +224,15 @@ function init() {
         }
     };
     setupWorld(scene);
+    conn.onopen = function () {
+        window.setInterval(function () {
+            player.update();
+        }, 1000 / 60);
+    };
 }
 exports.init = init;
 function animate() {
     requestAnimationFrame(animate);
-    player.update();
     renderer.render(scene, player.camera);
 }
 exports.animate = animate;
@@ -305,7 +316,7 @@ var LocalPlayer = /** @class */ (function (_super) {
         var state = new ArrayBuffer(1 + 4 + (6 * 4));
         var view = new DataView(state);
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
-        view.setUint32(1, this.uid, true); // The uid of the player
+        view.setUint32(1, this.uid); // The uid of the player
         view.setFloat32(5, this.rotation.x);
         view.setFloat32(9, this.rotation.y);
         view.setFloat32(13, this.rotation.z);

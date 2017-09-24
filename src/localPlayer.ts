@@ -96,7 +96,7 @@ export default
 
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
 
-        view.setUint32(1, this.uid, true); // The uid of the player
+        view.setUint32(1, this.uid); // The uid of the player
 
         view.setFloat32(5, this.rotation.x);
         view.setFloat32(9, this.rotation.y);

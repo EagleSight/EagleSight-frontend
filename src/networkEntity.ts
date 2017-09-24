@@ -15,11 +15,8 @@ class NetworkEntity extends THREE.Object3D {
 
     updateFromNetwork(data: DataView) {
 
-        this.rotation.set(data.getFloat32(5), data.getFloat32(9), data.getFloat32(13))
-
-        this.position.x = data.getFloat32(17);
-        this.position.y = data.getFloat32(21);
-        this.position.z = data.getFloat32(25);        
+        this.rotation.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
+        this.position.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
 
         this.updateMatrix();
     }
