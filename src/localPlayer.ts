@@ -11,6 +11,8 @@ export default
     public camera: THREE.PerspectiveCamera;
     private plane: THREE.SkinnedMesh;
 
+    private timeLastUpdate: number = (new Date()).getTime();
+
 
     private direction = {
         left: false,
@@ -18,7 +20,8 @@ export default
         forward: false
     };
 
-    private speed = 200;
+    private linSpeed = 10000; // unit / second
+    private angSpeed = 1.5; // radian / second
 
     constructor(uid: number, conn: WebSocket) {
 
@@ -113,17 +116,22 @@ export default
 
     update() {
 
+        const now = (new Date()).getTime();
+        const deltaTime = (now - this.timeLastUpdate) / 1000;
+
+        this.timeLastUpdate = now;
+
         if (this.direction.left) {
-            this.rotation.y += 0.05;
+            this.rotation.y += this.angSpeed * deltaTime;
         }
 
         if (this.direction.right) {
-            this.rotation.y -= 0.05;
+            this.rotation.y -= this.angSpeed * deltaTime;
         }
 
         if (this.direction.forward) {
-            this.position.z += Math.cos(this.rotation.y) * this.speed;
-            this.position.x += Math.sin(this.rotation.y) * this.speed;
+            this.position.z += Math.cos(this.rotation.y) * this.linSpeed * deltaTime;
+            this.position.x += Math.sin(this.rotation.y) * this.linSpeed * deltaTime;
         }
 
         this.updateNetwork();

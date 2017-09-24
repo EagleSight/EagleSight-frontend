@@ -224,15 +224,11 @@ function init() {
         }
     };
     setupWorld(scene);
-    conn.onopen = function () {
-        window.setInterval(function () {
-            player.update();
-        }, 1000 / 60);
-    };
 }
 exports.init = init;
 function animate() {
     requestAnimationFrame(animate);
+    player.update();
     renderer.render(scene, player.camera);
 }
 exports.animate = animate;
@@ -261,12 +257,14 @@ var LocalPlayer = /** @class */ (function (_super) {
     __extends(LocalPlayer, _super);
     function LocalPlayer(uid, conn) {
         var _this = _super.call(this, uid) || this;
+        _this.timeLastUpdate = (new Date()).getTime();
         _this.direction = {
             left: false,
             right: false,
             forward: false
         };
-        _this.speed = 200;
+        _this.linSpeed = 10000; // unit / second
+        _this.angSpeed = 1.5; // radian / second
         _this.conn = conn;
         _this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 50000);
         _this.camera.position.y = 1300;
@@ -326,15 +324,18 @@ var LocalPlayer = /** @class */ (function (_super) {
         this.conn.send(view.buffer);
     };
     LocalPlayer.prototype.update = function () {
+        var now = (new Date()).getTime();
+        var deltaTime = (now - this.timeLastUpdate) / 1000;
+        this.timeLastUpdate = now;
         if (this.direction.left) {
-            this.rotation.y += 0.05;
+            this.rotation.y += this.angSpeed * deltaTime;
         }
         if (this.direction.right) {
-            this.rotation.y -= 0.05;
+            this.rotation.y -= this.angSpeed * deltaTime;
         }
         if (this.direction.forward) {
-            this.position.z += Math.cos(this.rotation.y) * this.speed;
-            this.position.x += Math.sin(this.rotation.y) * this.speed;
+            this.position.z += Math.cos(this.rotation.y) * this.linSpeed * deltaTime;
+            this.position.x += Math.sin(this.rotation.y) * this.linSpeed * deltaTime;
         }
         this.updateNetwork();
     };

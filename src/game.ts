@@ -151,16 +151,12 @@ export function init() {
 
     setupWorld(scene);
 
-    conn.onopen = () => {
-        window.setInterval(() => {
-            player.update();
-        }, 1000/60);
-    }
-
 }
 
 export function animate() {
     requestAnimationFrame(animate);
+
+    player.update();
 
     renderer.render(scene, player.camera);
 }
