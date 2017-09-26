@@ -3,7 +3,6 @@ import LocalPlayer from './localPlayer'
 import RemotePlayer from './remotePlayer'
 import NetworkEntity from './NetworkEntity'
 
-
 var scene: THREE.Scene,
     renderer: THREE.WebGLRenderer;
 
@@ -13,6 +12,10 @@ var geometry: THREE.BoxGeometry,
     mesh: THREE.Mesh;
 
 var conn: WebSocket;
+
+var players = new Map<number, NetworkEntity>(); // Contains the players
+
+
 
 function generateTerrain(scene: THREE.Scene) {
 
@@ -66,17 +69,13 @@ function generateUID(): number {
     return Math.floor(Math.random() * 0xffffffff);
 }
 
-var players = new Map<number, NetworkEntity>(); // Contains the 
 
 export function init() {
 
     const localUID = generateUID();
 
-    console.log(localUID);
-
-
     // We just make sure that we have 8 chars in the uid
-    conn = new WebSocket('ws://127.0.0.1:8000/ws?uid=' + localUID.toString());
+    conn = new WebSocket('ws://scenaristes.net:8000/ws?uid=' + localUID.toString());
     conn.binaryType = 'arraybuffer';
 
     scene = new THREE.Scene();
@@ -96,18 +95,17 @@ export function init() {
     document.onkeyup = (e) => {
         player.keyUp(e);
     }
-    
 
     // Setup network listener
     conn.onmessage = (e) => {
 
-        var view = new DataView(e.data);
+        var data = new DataView(e.data);
 
-        switch (view.getUint8(0)) {
+        switch (data.getUint8(0)) {
             case 0x1: // connection
 
-                if (view.getUint32(1) != player.uid) {
-                    var newPlayer = new RemotePlayer(view.getUint32(1))
+                if (data.getUint32(1) != player.uid) {
+                    var newPlayer = new RemotePlayer(data.getUint32(1))
                     scene.add(newPlayer);
                     players.set(newPlayer.uid, newPlayer);
                 }
@@ -115,30 +113,27 @@ export function init() {
                 break;
             case 0x2: // deconnection
 
-                scene.remove(players.get(view.getUint32(1)))
-                players.delete(view.getUint32(1));
+                scene.remove(players.get(data.getUint32(1)))
+                players.delete(data.getUint32(1));
 
                 break;
             case 0x3: // Entiry update
 
-                // Empty
-                if (view.getUint16(1) == 0) {
-                    break;
-                }
-
                 // Receive a lot of updates in the same packet
-                for (var i = 0; i < view.getUint16(1); i++) {
-                    const updateFrame = new DataView(e.data, 3 + i * 28, 28);
-                    if (players.has(updateFrame.getUint32(0))) {
-                        players.get(updateFrame.getUint32(0)).updateFromNetwork(updateFrame);
-                    }
+                for (var i = 0; i < data.getUint16(5); i++) {
+
+                    const updateFrame = new DataView(e.data, 8 + i * (4 + 4 * 6), (4 + 4 * 6));
+
+                    const playerUID = updateFrame.getUint32(0);
+
+                    players.get(playerUID).updateFromNetwork(data.getUint32(1), updateFrame);
                 }
 
                 break;
             case 0x4: // Players list
-                
-                for (var i = 0; i < view.getUint16(1); i++) {
-                    var newPlayerUID = view.getUint32(1 + 2 + i * 4);
+
+                for (var i = 0; i < data.getUint16(1); i++) {
+                    var newPlayerUID = data.getUint32(1 + 2 + i * 4);
                     var newPlayer = new RemotePlayer(newPlayerUID)
                     scene.add(newPlayer);
                     players.set(newPlayerUID, newPlayer);

@@ -15,13 +15,13 @@ export default
 
 
     private direction = {
-        left: false,
-        right: false,
-        forward: false
+        yaw: 0,
+        pitch: 0,
+        roll: 0
     };
 
-    private linSpeed = 10000; // unit / second
-    private angSpeed = 1.5; // radian / second
+    private thrust = 0;
+    
 
     constructor(uid: number, conn: WebSocket) {
 
@@ -32,7 +32,7 @@ export default
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 50000);
 
         this.camera.position.y = 1300;
-        this.camera.position.z = -1000;
+        this.camera.position.z = -2000;
 
         this.camera.rotation.y = -Math.PI;
         this.camera.rotation.x = Math.PI / 5;
@@ -47,9 +47,6 @@ export default
 
             this.plane = new THREE.SkinnedMesh(geometry, this.material);
 
-            this.plane.position.y = 500;
-            this.plane.position.z = 500;
-
             this.add(this.plane);
         });
 
@@ -57,16 +54,16 @@ export default
 
     keyDown(e: KeyboardEvent) {
 
-        if (e.key == 'd' && !this.direction.right) {
-            this.direction.right = true;
+        if (e.key == 'd' && this.direction.yaw == 0) {
+            this.direction.yaw = -127;
         }
 
-        if (e.key == 'a' && !this.direction.left) {
-            this.direction.left = true;
+        if (e.key == 'a' && this.direction.yaw == 0) {
+            this.direction.yaw = 127;
         }
 
-        if (e.key == 'w' && !this.direction.forward) {
-            this.direction.forward = true;
+        if (e.key == 'w' && this.thrust == 0) {
+            this.thrust = 255;
         }
 
     }
@@ -75,13 +72,13 @@ export default
 
         switch (e.key) {
             case 'd':
-                this.direction.right = false;
+                this.direction.yaw = 0;
                 break;
             case 'a':
-                this.direction.left = false;
+                this.direction.yaw = 0;
                 break;
             case 'w':
-                this.direction.forward = false;
+                this.thrust = 0;
                 break
         }
 
@@ -90,24 +87,16 @@ export default
     updateNetwork() {
 
         if (this.conn.readyState != 1) { // We don't want to transmit
-            console.error('No connection to transmit on')
             return;
         }
 
-        var state = new ArrayBuffer(1 + 4 + (6 * 4));
+        var state = new ArrayBuffer(3);
         var view = new DataView(state);
 
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
 
-        view.setUint32(1, this.uid); // The uid of the player
-
-        view.setFloat32(5, this.rotation.x);
-        view.setFloat32(9, this.rotation.y);
-        view.setFloat32(13, this.rotation.z);
-
-        view.setFloat32(17, this.position.x);
-        view.setFloat32(21, this.position.y);
-        view.setFloat32(25, this.position.z);
+        view.setInt8(1, this.direction.yaw);
+        view.setUint8(2, this.thrust);
 
 
         this.conn.send(view.buffer);
@@ -115,24 +104,6 @@ export default
     }
 
     update() {
-
-        const now = (new Date()).getTime();
-        const deltaTime = (now - this.timeLastUpdate) / 1000;
-
-        this.timeLastUpdate = now;
-
-        if (this.direction.left) {
-            this.rotation.y += this.angSpeed * deltaTime;
-        }
-
-        if (this.direction.right) {
-            this.rotation.y -= this.angSpeed * deltaTime;
-        }
-
-        if (this.direction.forward) {
-            this.position.z += Math.cos(this.rotation.y) * this.linSpeed * deltaTime;
-            this.position.x += Math.sin(this.rotation.y) * this.linSpeed * deltaTime;
-        }
 
         this.updateNetwork();
 
