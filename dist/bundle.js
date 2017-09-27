@@ -138,6 +138,7 @@ var scene, renderer;
 var player;
 ;
 var geometry, mesh;
+var wsHost = 'ws://127.0.0.1:8000';
 var conn;
 var players = new Map(); // Contains the players
 function generateTerrain(scene) {
@@ -172,10 +173,18 @@ function setupWorld(scene) {
 function generateUID() {
     return Math.floor(Math.random() * 0xffffffff);
 }
+function initGamepad(localPlayer) {
+    window.addEventListener("gamepadconnected", function (e) {
+        localPlayer.connectGamepad(navigator.getGamepads()[e.gamepad.index]);
+    });
+    window.addEventListener("gamepaddisconnected", function (e) {
+        localPlayer.disconnectGamepad();
+    });
+}
 function init() {
     var localUID = generateUID();
     // We just make sure that we have 8 chars in the uid
-    conn = new WebSocket('ws://scenaristes.net:8000/ws?uid=' + localUID.toString());
+    conn = new WebSocket(wsHost + '/ws?uid=' + localUID.toString());
     conn.binaryType = 'arraybuffer';
     scene = new THREE.Scene();
     // We add the player to the scene
@@ -183,6 +192,8 @@ function init() {
     scene.add(player);
     // We add the player to entities list
     players.set(player.uid, player);
+    // Set the events related with the gamepad handling
+    initGamepad(player);
     document.onkeydown = function (e) {
         player.keyDown(e);
     };
@@ -207,7 +218,7 @@ function init() {
             case 0x3:// Entiry update
                 // Receive a lot of updates in the same packet
                 for (var i = 0; i < data.getUint16(5); i++) {
-                    var updateFrame = new DataView(e.data, 8 + i * (4 + 4 * 6), (4 + 4 * 6));
+                    var updateFrame = new DataView(e.data, 7 + i * (4 + 4 * 6), (4 + 4 * 6));
                     var playerUID = updateFrame.getUint32(0);
                     players.get(playerUID).updateFromNetwork(data.getUint32(1), updateFrame);
                 }
@@ -278,6 +289,12 @@ var LocalPlayer = /** @class */ (function (_super) {
         });
         return _this;
     }
+    LocalPlayer.prototype.connectGamepad = function (gamepad) {
+        this.gamepad = gamepad;
+    };
+    LocalPlayer.prototype.disconnectGamepad = function () {
+        this.gamepad = undefined;
+    };
     LocalPlayer.prototype.keyDown = function (e) {
         if (e.key == 'd' && this.direction.yaw == 0) {
             this.direction.yaw = -127;
@@ -313,7 +330,19 @@ var LocalPlayer = /** @class */ (function (_super) {
         view.setUint8(2, this.thrust);
         this.conn.send(view.buffer);
     };
+    LocalPlayer.prototype.gamepadUpdate = function () {
+        if (this.gamepad.axes.length > 0) {
+            this.direction.yaw = this.gamepad.axes[0] * 127;
+        }
+        if (this.gamepad.axes.length > 1) {
+            this.thrust = this.gamepad.axes[2];
+        }
+    };
     LocalPlayer.prototype.update = function () {
+        if (this.gamepad != undefined) {
+            // Gamepad logic here...
+            this.gamepadUpdate();
+        }
         this.updateNetwork();
     };
     return LocalPlayer;

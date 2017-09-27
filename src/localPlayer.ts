@@ -10,6 +10,7 @@ export default
     private material: THREE.MeshLambertMaterial;
     public camera: THREE.PerspectiveCamera;
     private plane: THREE.SkinnedMesh;
+    private gamepad: Gamepad;
 
     private timeLastUpdate: number = (new Date()).getTime();
 
@@ -50,6 +51,15 @@ export default
             this.add(this.plane);
         });
 
+
+    }
+
+    connectGamepad(gamepad: Gamepad) {
+        this.gamepad = gamepad;   
+    }
+
+    disconnectGamepad() {
+        this.gamepad = undefined;
     }
 
     keyDown(e: KeyboardEvent) {
@@ -103,7 +113,24 @@ export default
 
     }
 
+    gamepadUpdate() {
+        
+        if (this.gamepad.axes.length > 0) {
+            this.direction.yaw = this.gamepad.axes[0] * 127;
+        }
+
+        if (this.gamepad.axes.length > 1) {
+            this.thrust = this.gamepad.axes[2];
+        }
+
+    }
+
     update() {
+
+        if (this.gamepad != undefined) {
+            // Gamepad logic here...
+            this.gamepadUpdate();
+        }
 
         this.updateNetwork();
 

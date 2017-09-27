@@ -11,6 +11,7 @@ var player: LocalPlayer;;
 var geometry: THREE.BoxGeometry,
     mesh: THREE.Mesh;
 
+const wsHost = 'ws://127.0.0.1:8000';
 var conn: WebSocket;
 
 var players = new Map<number, NetworkEntity>(); // Contains the players
@@ -69,13 +70,24 @@ function generateUID(): number {
     return Math.floor(Math.random() * 0xffffffff);
 }
 
+function initGamepad(localPlayer: LocalPlayer) {
+
+    window.addEventListener("gamepadconnected", (e: any) => {
+        localPlayer.connectGamepad(navigator.getGamepads()[e.gamepad.index]);
+    });
+
+    window.addEventListener("gamepaddisconnected", (e: any) => {
+        localPlayer.disconnectGamepad();
+    });
+
+}
 
 export function init() {
 
     const localUID = generateUID();
 
     // We just make sure that we have 8 chars in the uid
-    conn = new WebSocket('ws://scenaristes.net:8000/ws?uid=' + localUID.toString());
+    conn = new WebSocket(wsHost + '/ws?uid=' + localUID.toString());
     conn.binaryType = 'arraybuffer';
 
     scene = new THREE.Scene();
@@ -87,6 +99,8 @@ export function init() {
     // We add the player to entities list
     players.set(player.uid, player);
 
+    // Set the events related with the gamepad handling
+    initGamepad(player);
 
     document.onkeydown = (e) => {
         player.keyDown(e);
@@ -122,7 +136,7 @@ export function init() {
                 // Receive a lot of updates in the same packet
                 for (var i = 0; i < data.getUint16(5); i++) {
 
-                    const updateFrame = new DataView(e.data, 8 + i * (4 + 4 * 6), (4 + 4 * 6));
+                    const updateFrame = new DataView(e.data, 7 + i * (4 + 4 * 6), (4 + 4 * 6));
 
                     const playerUID = updateFrame.getUint32(0);
 
