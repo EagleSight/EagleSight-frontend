@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import NetworkEntity from './NetworkEntity'
+import NetworkEntity from './networkEntity'
+import JoystickInterface from './joystickInterface'
 
 
 export default
@@ -10,7 +11,8 @@ export default
     private material: THREE.MeshLambertMaterial;
     public camera: THREE.PerspectiveCamera;
     private plane: THREE.SkinnedMesh;
-    private gamepad: Gamepad;
+    
+    private joystick: JoystickInterface;
 
     private timeLastUpdate: number = (new Date()).getTime();
 
@@ -22,7 +24,7 @@ export default
     };
 
     private thrust = 0;
-    
+
 
     constructor(uid: number, conn: WebSocket) {
 
@@ -51,16 +53,11 @@ export default
             this.add(this.plane);
         });
 
+        this.joystick = new JoystickInterface();
+
 
     }
 
-    connectGamepad(gamepad: Gamepad) {
-        this.gamepad = gamepad;   
-    }
-
-    disconnectGamepad() {
-        this.gamepad = undefined;
-    }
 
     keyDown(e: KeyboardEvent) {
 
@@ -113,24 +110,19 @@ export default
 
     }
 
-    gamepadUpdate() {
-        
-        if (this.gamepad.axes.length > 0) {
-            this.direction.yaw = this.gamepad.axes[0] * 127;
-        }
-
-        if (this.gamepad.axes.length > 1) {
-            this.thrust = this.gamepad.axes[2];
-        }
-
-    }
 
     update() {
 
-        if (this.gamepad != undefined) {
-            // Gamepad logic here...
-            this.gamepadUpdate();
-        }
+        // Gamepad logic here...
+        this.joystick.update((inputs) => {
+            console.log(inputs.yaw);
+            
+            
+            this.thrust = inputs.thrust * 255;
+            
+            this.direction.yaw = inputs.yaw * 127;
+
+        });
 
         this.updateNetwork();
 

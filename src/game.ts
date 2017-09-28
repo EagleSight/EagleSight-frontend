@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import LocalPlayer from './localPlayer'
 import RemotePlayer from './remotePlayer'
-import NetworkEntity from './NetworkEntity'
+import NetworkEntity from './networkEntity'
 
 var scene: THREE.Scene,
     renderer: THREE.WebGLRenderer;
@@ -70,17 +70,6 @@ function generateUID(): number {
     return Math.floor(Math.random() * 0xffffffff);
 }
 
-function initGamepad(localPlayer: LocalPlayer) {
-
-    window.addEventListener("gamepadconnected", (e: any) => {
-        localPlayer.connectGamepad(navigator.getGamepads()[e.gamepad.index]);
-    });
-
-    window.addEventListener("gamepaddisconnected", (e: any) => {
-        localPlayer.disconnectGamepad();
-    });
-
-}
 
 export function init() {
 
@@ -99,8 +88,6 @@ export function init() {
     // We add the player to entities list
     players.set(player.uid, player);
 
-    // Set the events related with the gamepad handling
-    initGamepad(player);
 
     document.onkeydown = (e) => {
         player.keyDown(e);

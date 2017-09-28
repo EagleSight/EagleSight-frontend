@@ -133,12 +133,12 @@ window.onload = function (e) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var THREE = __webpack_require__(0);
 var localPlayer_1 = __webpack_require__(4);
-var remotePlayer_1 = __webpack_require__(5);
+var remotePlayer_1 = __webpack_require__(6);
 var scene, renderer;
 var player;
 ;
 var geometry, mesh;
-var wsHost = 'ws://127.0.0.1:8000';
+var wsHost = 'ws://192.168.1.171:8000';
 var conn;
 var players = new Map(); // Contains the players
 function generateTerrain(scene) {
@@ -173,14 +173,6 @@ function setupWorld(scene) {
 function generateUID() {
     return Math.floor(Math.random() * 0xffffffff);
 }
-function initGamepad(localPlayer) {
-    window.addEventListener("gamepadconnected", function (e) {
-        localPlayer.connectGamepad(navigator.getGamepads()[e.gamepad.index]);
-    });
-    window.addEventListener("gamepaddisconnected", function (e) {
-        localPlayer.disconnectGamepad();
-    });
-}
 function init() {
     var localUID = generateUID();
     // We just make sure that we have 8 chars in the uid
@@ -192,8 +184,6 @@ function init() {
     scene.add(player);
     // We add the player to entities list
     players.set(player.uid, player);
-    // Set the events related with the gamepad handling
-    initGamepad(player);
     document.onkeydown = function (e) {
         player.keyDown(e);
     };
@@ -262,7 +252,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var THREE = __webpack_require__(0);
-var NetworkEntity_1 = __webpack_require__(1);
+var networkEntity_1 = __webpack_require__(1);
+var joystickInterface_1 = __webpack_require__(5);
 var LocalPlayer = /** @class */ (function (_super) {
     __extends(LocalPlayer, _super);
     function LocalPlayer(uid, conn) {
@@ -287,14 +278,9 @@ var LocalPlayer = /** @class */ (function (_super) {
             _this.plane = new THREE.SkinnedMesh(geometry, _this.material);
             _this.add(_this.plane);
         });
+        _this.joystick = new joystickInterface_1.default();
         return _this;
     }
-    LocalPlayer.prototype.connectGamepad = function (gamepad) {
-        this.gamepad = gamepad;
-    };
-    LocalPlayer.prototype.disconnectGamepad = function () {
-        this.gamepad = undefined;
-    };
     LocalPlayer.prototype.keyDown = function (e) {
         if (e.key == 'd' && this.direction.yaw == 0) {
             this.direction.yaw = -127;
@@ -330,28 +316,222 @@ var LocalPlayer = /** @class */ (function (_super) {
         view.setUint8(2, this.thrust);
         this.conn.send(view.buffer);
     };
-    LocalPlayer.prototype.gamepadUpdate = function () {
-        if (this.gamepad.axes.length > 0) {
-            this.direction.yaw = this.gamepad.axes[0] * 127;
-        }
-        if (this.gamepad.axes.length > 1) {
-            this.thrust = this.gamepad.axes[2];
-        }
-    };
     LocalPlayer.prototype.update = function () {
-        if (this.gamepad != undefined) {
-            // Gamepad logic here...
-            this.gamepadUpdate();
-        }
+        var _this = this;
+        // Gamepad logic here...
+        this.joystick.update(function (inputs) {
+            console.log(inputs.yaw);
+            _this.thrust = inputs.thrust * 255;
+            _this.direction.yaw = inputs.yaw * 127;
+        });
         this.updateNetwork();
     };
     return LocalPlayer;
-}(NetworkEntity_1.default));
+}(networkEntity_1.default));
 exports.default = LocalPlayer;
 
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var JoystickInterface = /** @class */ (function () {
+    function JoystickInterface() {
+        var _this = this;
+        this.currentIndex = 1;
+        this.map = {
+            thrustAxis: {
+                index: 0,
+                min: 0,
+                max: 0,
+                range: 0,
+                mul: 0,
+            },
+            rollAxis: {
+                index: 0,
+                min: 0,
+                max: 0,
+                range: 0,
+                mul: 0,
+            },
+            pitchAxis: {
+                index: 0,
+                min: 0,
+                max: 0,
+                range: 0,
+                mul: 0,
+            },
+            yawAxis: {
+                index: 0,
+                min: 0,
+                max: 0,
+                range: 0,
+                mul: 0,
+            },
+            fireButton: 0,
+            talkButton: 0
+        };
+        this.connected = false;
+        window.addEventListener("gamepadconnected", function (e) {
+            _this.connect(e.gamepad.index);
+        });
+        window.addEventListener("gamepaddisconnected", function (e) {
+            _this.disconnect();
+        });
+        if (navigator.getGamepads()[0] != null) {
+            this.connect(0);
+        }
+    }
+    JoystickInterface.prototype.isDeviceKnow = function (deviceId) {
+        return localStorage.getItem('joystick:' + deviceId) != null;
+    };
+    // Returns the index of the variating axis. Returns -1 if nothing changed
+    JoystickInterface.prototype.findIndexOfVariation = function (low, high) {
+        var axis = {
+            index: 0,
+            min: 0,
+            max: 0,
+            range: 0,
+            mul: 0,
+        };
+        console.log(low);
+        console.log(high);
+        for (var i = low.length; i >= 0; i--) {
+            if (high[i] == low[i])
+                continue;
+            if (Math.abs(high[i] - low[i]) >= axis.range) {
+                console.log(i);
+                axis = {
+                    index: i,
+                    min: low[i] > high[i] ? high[i] : low[i],
+                    max: low[i] < high[i] ? high[i] : low[i],
+                    range: Math.abs(high[i]) + Math.abs(low[i]),
+                    mul: low[i] > high[i] ? -1 : 1,
+                };
+                console.log(axis.range);
+            }
+        }
+        return axis;
+    };
+    // All the procedure to register a new map (axes configuration)
+    JoystickInterface.prototype.registerNewMap = function (gamepadIndex, deviceId, callback) {
+        var _this = this;
+        var joystickMap = this.map;
+        var step = 0;
+        var sampleLow = [];
+        var sampleHight = [];
+        var intruction = document.createElement('div');
+        intruction.innerText = 'You need to re-map your joystick. It will take a moment... Just click next and follow the instructions.'; // Here come the first message to be displayed
+        var btnNextStep = document.createElement('button');
+        btnNextStep.style.padding = '10px';
+        btnNextStep.style.width = '80%';
+        btnNextStep.textContent = 'Next';
+        btnNextStep.style.verticalAlign = 'bottom';
+        var modalBody = document.createElement('div');
+        modalBody.style.position = 'fixed';
+        modalBody.style.top = modalBody.style.right = modalBody.style.bottom = modalBody.style.left = '20px';
+        modalBody.style.zIndex = '100';
+        modalBody.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        modalBody.style.padding = '40px';
+        modalBody.style.textAlign = 'center';
+        modalBody.style.borderRadius = '8px';
+        modalBody.appendChild(intruction);
+        modalBody.appendChild(btnNextStep);
+        // Setup the modal
+        document.body.appendChild(modalBody);
+        var stepsIntructions = [
+            'THRUST -> DOWN',
+            'THRUST -> UP',
+            'YAW -> RIGHT',
+            'YAW -> LEFT',
+            'DONE ! Click one more time!',
+            ''
+        ];
+        btnNextStep.onclick = function () {
+            // Instructions
+            intruction.innerText = stepsIntructions[step];
+            var changedAxis = -1;
+            // Actions
+            switch (step) {
+                case 0:
+                    step = 1;
+                    break;
+                case 1:// We put the gas down for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
+                    step = 2;
+                    break;
+                case 2:// We put the gas up for reference
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+                    joystickMap.thrustAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
+                    step = 3;
+                    break;
+                case 3:// We put the yaw up for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
+                    step = 4;
+                    break;
+                case 4:// Last Step : Save the map in the local storage
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+                    joystickMap.yawAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
+                    step = 5;
+                    break;
+                case 5:
+                    step = 6;
+                    break;
+                case 6:// Last Step : Save the map in the local storage
+                    localStorage.setItem('joystick:' + deviceId, JSON.stringify(joystickMap));
+                    // Remove the modal
+                    document.body.removeChild(modalBody);
+                    callback();
+                    break;
+            }
+            ;
+        };
+    };
+    JoystickInterface.prototype.connect = function (index) {
+        var _this = this;
+        var device = navigator.getGamepads()[index];
+        var approve = function () {
+            _this.currentIndex = index;
+            _this.map = JSON.parse(localStorage.getItem('joystick:' + device.id));
+            _this.connected = true;
+            console.log('gamepad connected');
+        };
+        if (this.isDeviceKnow(device.id)) {
+            approve();
+        }
+        else {
+            this.registerNewMap(index, device.id, approve);
+        }
+    };
+    JoystickInterface.prototype.disconnect = function () {
+        this.currentIndex = -1;
+        this.connected = false;
+        console.log('gamepad disconnected');
+    };
+    JoystickInterface.prototype.update = function (callback) {
+        if (this.connected) {
+            var device = navigator.getGamepads()[this.currentIndex];
+            var t = (device.axes[this.map.thrustAxis.index] * this.map.thrustAxis.mul + Math.abs(this.map.thrustAxis.min)) / this.map.thrustAxis.range, r = device.axes[this.map.rollAxis.index] * this.map.rollAxis.mul, p = device.axes[this.map.pitchAxis.index] * this.map.pitchAxis.mul, y = device.axes[this.map.yawAxis.index] * this.map.yawAxis.mul;
+            callback({
+                thrust: t,
+                roll: r,
+                pitch: r,
+                yaw: y / (y < 0 ? -this.map.thrustAxis.min : this.map.thrustAxis.max),
+                firePushed: device.buttons[this.map.fireButton].pressed,
+                talkPushed: device.buttons[this.map.talkButton].pressed
+            });
+        }
+    };
+    return JoystickInterface;
+}());
+exports.default = JoystickInterface;
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -368,7 +548,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var THREE = __webpack_require__(0);
-var NetworkEntity_1 = __webpack_require__(1);
+var networkEntity_1 = __webpack_require__(1);
 var RemotePlayer = /** @class */ (function (_super) {
     __extends(RemotePlayer, _super);
     function RemotePlayer(uid) {
@@ -384,7 +564,7 @@ var RemotePlayer = /** @class */ (function (_super) {
         return _this;
     }
     return RemotePlayer;
-}(NetworkEntity_1.default));
+}(networkEntity_1.default));
 exports.default = RemotePlayer;
 
 

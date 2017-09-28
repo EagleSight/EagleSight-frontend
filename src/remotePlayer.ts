@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import NetworkEntity from './NetworkEntity'
+ import NetworkEntity from './networkEntity'
 
 
 export default
