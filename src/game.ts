@@ -11,7 +11,7 @@ var player: LocalPlayer;;
 var geometry: THREE.BoxGeometry,
     mesh: THREE.Mesh;
 
-const wsHost = 'ws://127.0.0.1:8000';
+const wsHost = 'ws://' + window.location.host + ':8000';
 var conn: WebSocket;
 
 var players = new Map<number, NetworkEntity>(); // Contains the players

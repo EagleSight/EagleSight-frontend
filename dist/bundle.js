@@ -138,7 +138,7 @@ var scene, renderer;
 var player;
 ;
 var geometry, mesh;
-var wsHost = 'ws://192.168.1.171:8000';
+var wsHost = 'ws://159.203.41.16:8000';
 var conn;
 var players = new Map(); // Contains the players
 function generateTerrain(scene) {
