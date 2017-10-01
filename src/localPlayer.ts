@@ -61,15 +61,15 @@ export default
 
     keyDown(e: KeyboardEvent) {
 
-        if (e.key == 'd' && this.direction.yaw == 0) {
+        if (e.keyCode == 68 && this.direction.yaw == 0) { // d
             this.direction.yaw = -127;
         }
 
-        if (e.key == 'a' && this.direction.yaw == 0) {
+        if (e.keyCode == 65 && this.direction.yaw == 0) { // a
             this.direction.yaw = 127;
         }
 
-        if (e.key == 'w' && this.thrust == 0) {
+        if (e.keyCode == 87 && this.thrust == 0) { // w
             this.thrust = 255;
         }
 
@@ -77,14 +77,14 @@ export default
 
     keyUp(e: KeyboardEvent) {
 
-        switch (e.key) {
-            case 'd':
+        switch (e.keyCode) {
+            case 68: // d
                 this.direction.yaw = 0;
                 break;
-            case 'a':
+            case 65: // a
                 this.direction.yaw = 0;
                 break;
-            case 'w':
+            case 87: // w
                 this.thrust = 0;
                 break
         }
