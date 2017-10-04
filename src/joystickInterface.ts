@@ -100,15 +100,15 @@ export default
 
         console.log(low);
         console.log(high);
-        
+
 
         for (var i = low.length; i >= 0; i--) {
             if (high[i] == low[i]) // Ignore the identical
                 continue;
-            
+
             if (Math.abs(high[i] - low[i]) >= axis.range) {
                 console.log(i);
-                
+
                 axis = {
                     index: i,
                     min: low[i] > high[i] ? high[i] : low[i],
@@ -168,6 +168,8 @@ export default
             'THRUST -> UP',
             'YAW -> RIGHT',
             'YAW -> LEFT',
+            'PITCH -> DOWN',
+            'PITCH -> UP',
             'DONE ! Click one more time!',
             ''
         ]
@@ -185,6 +187,7 @@ export default
                 case 0:
                     step = 1;
                     break;
+
                 case 1: // We put the gas down for reference
                     sampleLow = navigator.getGamepads()[gamepadIndex].axes;
                     step = 2;
@@ -197,6 +200,7 @@ export default
                     step = 3;
 
                     break;
+
                 case 3: // We put the yaw up for reference
                     sampleLow = navigator.getGamepads()[gamepadIndex].axes;
                     step = 4;
@@ -208,10 +212,23 @@ export default
 
                     step = 5;
                     break;
-                case 5:
-                    step = 6;
+
+                case 5: // We put the yaw up for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
+                    step = 4;
                     break;
                 case 6: // Last Step : Save the map in the local storage
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+
+                    joystickMap.pitchAxis = this.findIndexOfVariation(sampleLow, sampleHight);
+
+                    step = 7;
+                    break;
+
+                case 7:
+                    step = 8;
+                    break;
+                case 8: // Last Step : Save the map in the local storage
 
                     localStorage.setItem('joystick:' + deviceId, JSON.stringify(joystickMap));
 
@@ -260,11 +277,11 @@ export default
 
             const device = navigator.getGamepads()[this.currentIndex];
 
-            
+
             var t = (device.axes[this.map.thrustAxis.index] * this.map.thrustAxis.mul + Math.abs(this.map.thrustAxis.min)) / this.map.thrustAxis.range,
                 r = device.axes[this.map.rollAxis.index] * this.map.rollAxis.mul,
                 p = device.axes[this.map.pitchAxis.index] * this.map.pitchAxis.mul,
-                y = device.axes[this.map.yawAxis.index] * this.map.yawAxis.mul;            
+                y = device.axes[this.map.yawAxis.index] * this.map.yawAxis.mul;
 
             callback({
                 thrust: t,

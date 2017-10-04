@@ -288,6 +288,12 @@ var LocalPlayer = /** @class */ (function (_super) {
         if (e.keyCode == 65 && this.direction.yaw == 0) {
             this.direction.yaw = 127;
         }
+        if (e.keyCode == 40 && this.direction.pitch == 0) {
+            this.direction.pitch = 127;
+        }
+        if (e.keyCode == 38 && this.direction.pitch == 0) {
+            this.direction.pitch = -127;
+        }
         if (e.keyCode == 87 && this.thrust == 0) {
             this.thrust = 255;
         }
@@ -300,6 +306,12 @@ var LocalPlayer = /** @class */ (function (_super) {
             case 65:// a
                 this.direction.yaw = 0;
                 break;
+            case 40:// arrow down
+                this.direction.pitch = 0;
+                break;
+            case 38:// arrow up
+                this.direction.pitch = 0;
+                break;
             case 87:// w
                 this.thrust = 0;
                 break;
@@ -309,11 +321,13 @@ var LocalPlayer = /** @class */ (function (_super) {
         if (this.conn.readyState != 1) {
             return;
         }
-        var state = new ArrayBuffer(3);
+        var state = new ArrayBuffer(5);
         var view = new DataView(state);
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
         view.setInt8(1, this.direction.yaw);
-        view.setUint8(2, this.thrust);
+        view.setInt8(2, this.direction.pitch);
+        //view.setInt8(3, this.direction.roll);
+        view.setUint8(4, this.thrust);
         this.conn.send(view.buffer);
     };
     LocalPlayer.prototype.update = function () {
