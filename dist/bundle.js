@@ -461,6 +461,8 @@ var JoystickInterface = /** @class */ (function () {
             'THRUST -> UP',
             'YAW -> RIGHT',
             'YAW -> LEFT',
+            'PITCH -> DOWN',
+            'PITCH -> UP',
             'DONE ! Click one more time!',
             ''
         ];
@@ -491,10 +493,19 @@ var JoystickInterface = /** @class */ (function () {
                     joystickMap.yawAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
                     step = 5;
                     break;
-                case 5:
-                    step = 6;
+                case 5:// We put the yaw up for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
+                    step = 4;
                     break;
                 case 6:// Last Step : Save the map in the local storage
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+                    joystickMap.pitchAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
+                    step = 7;
+                    break;
+                case 7:
+                    step = 8;
+                    break;
+                case 8:// Last Step : Save the map in the local storage
                     localStorage.setItem('joystick:' + deviceId, JSON.stringify(joystickMap));
                     // Remove the modal
                     document.body.removeChild(modalBody);
