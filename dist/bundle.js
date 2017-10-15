@@ -94,6 +94,7 @@ var NetworkEntity = /** @class */ (function (_super) {
         _this.uid = uid;
         _this.lastTick = 0;
         _this.matrixAutoUpdate = false;
+        _this.eulerOrder = 'YZX';
         return _this;
     }
     NetworkEntity.prototype.updateFromNetwork = function (tick, data) {
@@ -102,7 +103,11 @@ var NetworkEntity = /** @class */ (function (_super) {
         }
         this.lastTick = tick;
         this.position.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
-        this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
+        this.rotateY(data.getFloat32(20));
+        this.rotateX(data.getFloat32(16));
+        this.rotateZ(data.getFloat32(24));
+        // TODO : Use absolute rotation
+        //this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
         this.updateMatrix();
     };
     return NetworkEntity;
@@ -260,17 +265,26 @@ var LocalPlayer = /** @class */ (function (_super) {
         var _this = _super.call(this, uid) || this;
         _this.timeLastUpdate = (new Date()).getTime();
         _this.direction = {
-            yaw: 0,
             pitch: 0,
-            roll: 0
+            roll: 0,
+            yaw: 0,
+        };
+        _this.keyMapping = {
+            rollUp: 65,
+            rollDown: 68,
+            pitchUp: 87,
+            pitchDown: 83,
+            yawUp: 37,
+            yawDown: 39,
+            thrustUp: 32 // Space bare
         };
         _this.thrust = 0;
         _this.conn = conn;
-        _this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 50000);
-        _this.camera.position.y = 1300;
+        _this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
+        _this.camera.position.y = 500;
         _this.camera.position.z = -2000;
         _this.camera.rotation.y = -Math.PI;
-        _this.camera.rotation.x = Math.PI / 5;
+        //this.camera.rotation.x = Math.PI / 5;
         _this.add(_this.camera);
         var jsonLoader = new THREE.JSONLoader();
         jsonLoader.load('dist/protoplane.json', function (geometry) {
@@ -282,37 +296,57 @@ var LocalPlayer = /** @class */ (function (_super) {
         return _this;
     }
     LocalPlayer.prototype.keyDown = function (e) {
-        if (e.keyCode == 68 && this.direction.yaw == 0) {
-            this.direction.yaw = -127;
+        // ROLL
+        if (e.keyCode == this.keyMapping.rollUp && this.direction.pitch == 0) {
+            this.direction.roll = 127;
         }
-        if (e.keyCode == 65 && this.direction.yaw == 0) {
-            this.direction.yaw = 127;
+        if (e.keyCode == this.keyMapping.rollDown && this.direction.pitch == 0) {
+            this.direction.roll = -127;
         }
-        if (e.keyCode == 40 && this.direction.pitch == 0) {
+        // PITCH
+        if (e.keyCode == this.keyMapping.pitchUp && this.direction.pitch == 0) {
             this.direction.pitch = 127;
         }
-        if (e.keyCode == 38 && this.direction.pitch == 0) {
+        if (e.keyCode == this.keyMapping.pitchDown && this.direction.pitch == 0) {
             this.direction.pitch = -127;
         }
-        if (e.keyCode == 87 && this.thrust == 0) {
+        // YAW
+        if (e.keyCode == this.keyMapping.yawUp && this.direction.yaw == 0) {
+            this.direction.yaw = 127;
+        }
+        if (e.keyCode == this.keyMapping.yawDown && this.direction.yaw == 0) {
+            this.direction.yaw = -127;
+        }
+        // THRUST
+        if (e.keyCode == this.keyMapping.thrustUp && this.thrust == 0) {
             this.thrust = 255;
         }
     };
     LocalPlayer.prototype.keyUp = function (e) {
         switch (e.keyCode) {
-            case 68:// d
-                this.direction.yaw = 0;
+            // ROLL
+            case this.keyMapping.rollUp:
+                this.direction.roll = 0;
                 break;
-            case 65:// a
-                this.direction.yaw = 0;
+            case this.keyMapping.rollDown:
+                this.direction.roll = 0;
                 break;
-            case 40:// arrow down
+            // PITCH
+            case this.keyMapping.pitchUp:
                 this.direction.pitch = 0;
                 break;
-            case 38:// arrow up
+            case this.keyMapping.pitchDown:
                 this.direction.pitch = 0;
                 break;
-            case 87:// w
+            // YAW
+            case this.keyMapping.yawUp:
+                this.direction.yaw = 0;
+                break;
+            case this.keyMapping.yawDown:
+                this.direction.yaw = 0;
+                break;
+            // THRUST
+            case this.keyMapping.thrustUp:
                 this.thrust = 0;
                 break;
         }
@@ -324,9 +358,9 @@ var LocalPlayer = /** @class */ (function (_super) {
         var state = new ArrayBuffer(5);
         var view = new DataView(state);
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
-        view.setInt8(1, this.direction.yaw);
+        view.setInt8(1, this.direction.roll);
         view.setInt8(2, this.direction.pitch);
-        //view.setInt8(3, this.direction.roll);
+        view.setInt8(3, this.direction.yaw);
         view.setUint8(4, this.thrust);
         this.conn.send(view.buffer);
     };
@@ -336,6 +370,8 @@ var LocalPlayer = /** @class */ (function (_super) {
         this.joystick.update(function (inputs) {
             console.log(inputs.yaw);
             _this.thrust = inputs.thrust * 255;
+            _this.direction.roll = inputs.roll * 127;
+            _this.direction.pitch = inputs.pitch * 127;
             _this.direction.yaw = inputs.yaw * 127;
         });
         this.updateNetwork();
@@ -459,10 +495,12 @@ var JoystickInterface = /** @class */ (function () {
         var stepsIntructions = [
             'THRUST -> DOWN',
             'THRUST -> UP',
-            'YAW -> RIGHT',
             'YAW -> LEFT',
+            'YAW -> RIGHT',
             'PITCH -> DOWN',
             'PITCH -> UP',
+            'ROLL -> LEFT',
+            'ROLL -> RIGHT',
             'DONE ! Click one more time!',
             ''
         ];
@@ -490,22 +528,31 @@ var JoystickInterface = /** @class */ (function () {
                     break;
                 case 4:// Last Step : Save the map in the local storage
                     sampleHight = navigator.getGamepads()[gamepadIndex].axes;
-                    joystickMap.yawAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
+                    //                    joystickMap.yawAxis = this.findIndexOfVariation(sampleLow, sampleHight);
                     step = 5;
                     break;
                 case 5:// We put the yaw up for reference
                     sampleLow = navigator.getGamepads()[gamepadIndex].axes;
-                    step = 4;
+                    step = 6;
                     break;
                 case 6:// Last Step : Save the map in the local storage
                     sampleHight = navigator.getGamepads()[gamepadIndex].axes;
                     joystickMap.pitchAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
                     step = 7;
                     break;
-                case 7:
+                case 7:// We put the yaw up for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
                     step = 8;
                     break;
                 case 8:// Last Step : Save the map in the local storage
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+                    joystickMap.rollAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
+                    step = 9;
+                    break;
+                case 9:
+                    step = 10;
+                    break;
+                case 10:// Last Step : Save the map in the local storage
                     localStorage.setItem('joystick:' + deviceId, JSON.stringify(joystickMap));
                     // Remove the modal
                     document.body.removeChild(modalBody);

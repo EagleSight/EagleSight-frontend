@@ -170,6 +170,8 @@ export default
             'YAW -> LEFT',
             'PITCH -> DOWN',
             'PITCH -> UP',
+            'ROLL -> RIGHT',
+            'ROLL -> LEFT',
             'DONE ! Click one more time!',
             ''
         ]
@@ -215,7 +217,7 @@ export default
 
                 case 5: // We put the yaw up for reference
                     sampleLow = navigator.getGamepads()[gamepadIndex].axes;
-                    step = 4;
+                    step = 6;
                     break;
                 case 6: // Last Step : Save the map in the local storage
                     sampleHight = navigator.getGamepads()[gamepadIndex].axes;
@@ -225,10 +227,22 @@ export default
                     step = 7;
                     break;
 
-                case 7:
+                case 7: // We put the yaw up for reference
+                    sampleLow = navigator.getGamepads()[gamepadIndex].axes;
                     step = 8;
                     break;
                 case 8: // Last Step : Save the map in the local storage
+                    sampleHight = navigator.getGamepads()[gamepadIndex].axes;
+
+                    joystickMap.rollAxis = this.findIndexOfVariation(sampleLow, sampleHight);
+
+                    step = 9;
+                    break;
+
+                case 9:
+                    step = 10;
+                    break;
+                case 10: // Last Step : Save the map in the local storage
 
                     localStorage.setItem('joystick:' + deviceId, JSON.stringify(joystickMap));
 
