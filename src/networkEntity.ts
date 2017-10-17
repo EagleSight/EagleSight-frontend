@@ -27,12 +27,7 @@ class NetworkEntity extends THREE.Object3D {
         this.lastTick = tick;
                 
         this.position.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
-        this.rotateY(data.getFloat32(20))
-        this.rotateX(data.getFloat32(16))
-        this.rotateZ(data.getFloat32(24))
-        
-        // TODO : Use absolute rotation
-        //this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
+        this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
 
         this.updateMatrix();
 

@@ -103,11 +103,7 @@ var NetworkEntity = /** @class */ (function (_super) {
         }
         this.lastTick = tick;
         this.position.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
-        this.rotateY(data.getFloat32(20));
-        this.rotateX(data.getFloat32(16));
-        this.rotateZ(data.getFloat32(24));
-        // TODO : Use absolute rotation
-        //this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
+        this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
         this.updateMatrix();
     };
     return NetworkEntity;
@@ -495,12 +491,12 @@ var JoystickInterface = /** @class */ (function () {
         var stepsIntructions = [
             'THRUST -> DOWN',
             'THRUST -> UP',
-            'YAW -> LEFT',
             'YAW -> RIGHT',
+            'YAW -> LEFT',
             'PITCH -> DOWN',
             'PITCH -> UP',
-            'ROLL -> LEFT',
             'ROLL -> RIGHT',
+            'ROLL -> LEFT',
             'DONE ! Click one more time!',
             ''
         ];
@@ -528,7 +524,7 @@ var JoystickInterface = /** @class */ (function () {
                     break;
                 case 4:// Last Step : Save the map in the local storage
                     sampleHight = navigator.getGamepads()[gamepadIndex].axes;
-                    //                    joystickMap.yawAxis = this.findIndexOfVariation(sampleLow, sampleHight);
+                    joystickMap.yawAxis = _this.findIndexOfVariation(sampleLow, sampleHight);
                     step = 5;
                     break;
                 case 5:// We put the yaw up for reference
