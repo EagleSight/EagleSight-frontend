@@ -94,7 +94,7 @@ var NetworkEntity = /** @class */ (function (_super) {
         _this.uid = uid;
         _this.lastTick = 0;
         _this.matrixAutoUpdate = false;
-        _this.eulerOrder = 'YZX';
+        _this.rotation.order = 'YZX';
         return _this;
     }
     NetworkEntity.prototype.updateFromNetwork = function (tick, data) {
@@ -135,6 +135,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var THREE = __webpack_require__(0);
 var localPlayer_1 = __webpack_require__(4);
 var remotePlayer_1 = __webpack_require__(6);
+var arenaMap_1 = __webpack_require__(7);
 var scene, renderer;
 var player;
 ;
@@ -143,19 +144,25 @@ var wsHost = 'ws://' + window.location.hostname + ':8000';
 var conn;
 var players = new Map(); // Contains the players
 function generateTerrain(scene) {
-    // Here comes the cubes carpet
-    geometry = new THREE.BoxGeometry(200, 200, 200);
-    var d = 4000;
-    var root = 50;
-    for (var i = 0; i < root * root; i++) {
-        var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0x888888 + 0x777777 });
-        mesh = new THREE.Mesh(geometry, material);
-        mesh.matrixAutoUpdate = false;
-        mesh.position.x = Math.floor(i / root) * d;
-        mesh.position.z = (i % root) * -d;
-        mesh.updateMatrix();
-        scene.add(mesh);
-    }
+    console.log('Loading map');
+    fetch('/dist/map.esmap', {}).then(function (resp) {
+        return resp.arrayBuffer();
+    }).then(function (arr) {
+        scene.add(new arenaMap_1.default(arr));
+    });
+    // // Here comes the cubes carpet
+    // geometry = new THREE.BoxGeometry(400, 400, 400);
+    // const d = 8000;
+    // const root = 60;
+    // for (var i = 0; i < root * root; i++) {
+    //     var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0x888888 + 0x777777 });
+    //     mesh = new THREE.Mesh(geometry, material);
+    //     mesh.matrixAutoUpdate = false;
+    //     mesh.position.x = Math.floor(i / root) * d;
+    //     mesh.position.z = (i % root) * -d;
+    //     mesh.updateMatrix();
+    //     scene.add(mesh);
+    // }
 }
 function setupWorld(scene) {
     generateTerrain(scene);
@@ -168,7 +175,7 @@ function setupWorld(scene) {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setClearColor(0x87CEFA);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(devicePixelRatio);
+    //renderer.setPixelRatio(devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 }
 function generateUID() {
@@ -277,15 +284,16 @@ var LocalPlayer = /** @class */ (function (_super) {
         _this.thrust = 0;
         _this.conn = conn;
         _this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
-        _this.camera.position.y = 500;
-        _this.camera.position.z = -2000;
+        _this.camera.position.y = 2;
+        _this.camera.position.z = -5;
         _this.camera.rotation.y = -Math.PI;
         //this.camera.rotation.x = Math.PI / 5;
         _this.add(_this.camera);
         var jsonLoader = new THREE.JSONLoader();
         jsonLoader.load('dist/protoplane.json', function (geometry) {
-            _this.material = new THREE.MeshLambertMaterial({ color: 0x085b08, skinning: true });
+            _this.material = new THREE.MeshLambertMaterial({ color: 0x085b08 });
             _this.plane = new THREE.SkinnedMesh(geometry, _this.material);
+            _this.plane.scale.set(0.002, 0.002, 0.002);
             _this.add(_this.plane);
         });
         _this.joystick = new joystickInterface_1.default();
@@ -364,7 +372,6 @@ var LocalPlayer = /** @class */ (function (_super) {
         var _this = this;
         // Gamepad logic here...
         this.joystick.update(function (inputs) {
-            console.log(inputs.yaw);
             _this.thrust = inputs.thrust * 255;
             _this.direction.roll = inputs.roll * 127;
             _this.direction.pitch = inputs.pitch * 127;
@@ -449,7 +456,6 @@ var JoystickInterface = /** @class */ (function () {
             if (high[i] == low[i])
                 continue;
             if (Math.abs(high[i] - low[i]) >= axis.range) {
-                console.log(i);
                 axis = {
                     index: i,
                     min: low[i] > high[i] ? high[i] : low[i],
@@ -493,8 +499,8 @@ var JoystickInterface = /** @class */ (function () {
             'THRUST -> UP',
             'YAW -> RIGHT',
             'YAW -> LEFT',
-            'PITCH -> DOWN',
             'PITCH -> UP',
+            'PITCH -> DOWN',
             'ROLL -> RIGHT',
             'ROLL -> LEFT',
             'DONE ! Click one more time!',
@@ -586,7 +592,7 @@ var JoystickInterface = /** @class */ (function () {
             callback({
                 thrust: t,
                 roll: r,
-                pitch: r,
+                pitch: p,
                 yaw: y / (y < 0 ? -this.map.thrustAxis.min : this.map.thrustAxis.max),
                 firePushed: device.buttons[this.map.fireButton].pressed,
                 talkPushed: device.buttons[this.map.talkButton].pressed
@@ -625,8 +631,8 @@ var RemotePlayer = /** @class */ (function (_super) {
         jsonLoader.load('dist/protoplane.json', function (geometry) {
             _this.material = new THREE.MeshLambertMaterial({ color: 0xf84b08 });
             _this.plane = new THREE.SkinnedMesh(geometry, _this.material);
-            _this.plane.position.y = 500;
-            _this.plane.position.z = 500;
+            _this.position.y = 500;
+            _this.position.z = 500;
             _this.add(_this.plane);
         });
         return _this;
@@ -634,6 +640,88 @@ var RemotePlayer = /** @class */ (function (_super) {
     return RemotePlayer;
 }(networkEntity_1.default));
 exports.default = RemotePlayer;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var THREE = __webpack_require__(0);
+var ArenaMap = /** @class */ (function (_super) {
+    __extends(ArenaMap, _super);
+    function ArenaMap(source) {
+        var _this = this;
+        console.time();
+        var sourceView = new DataView(source);
+        var width = sourceView.getUint16(0, true), depth = sourceView.getUint16(2, true), distance = 30, // sourceView.getFloat32(6, true),
+        map_width = width * distance, map_depth = depth * distance, centerX = map_width / 2, centerZ = map_depth / 2;
+        console.log(width);
+        console.log(depth);
+        console.log(distance);
+        var pts = new Int16Array(source, 2 + 2 + 2 + 4, width * depth);
+        var vertices = new Float32Array((width - 1) * (depth - 1) * 9 * 2);
+        var i = 0;
+        for (var r = 0; r < depth - 1; r++) {
+            for (var c = 0; c < width - 1; c++) {
+                var p = r * width + c;
+                var RIGHT = (c + 1) * distance - centerX, LEFT = c * distance - centerX; // Where i is
+                var UP = r * distance - centerZ, // Where i is
+                DOWN = (r + 1) * distance - centerZ;
+                vertices.set([
+                    // UP RIGHT
+                    RIGHT,
+                    pts[p + 1],
+                    UP,
+                    // UP LEFT
+                    LEFT,
+                    pts[p],
+                    UP,
+                    // DOWN LEFT
+                    LEFT,
+                    pts[p + width],
+                    DOWN,
+                    // DOWN LEFT
+                    LEFT,
+                    pts[p + width],
+                    DOWN,
+                    // DOWN RIGHT
+                    RIGHT,
+                    pts[p + width + 1],
+                    DOWN,
+                    // UP RIGHT
+                    RIGHT,
+                    pts[p + 1],
+                    UP // Z
+                ], i * 9 * 2);
+                i++;
+            }
+        }
+        console.log('Map loaded');
+        var geometry = new THREE.BufferGeometry();
+        geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
+        var material = new THREE.MeshLambertMaterial({ color: 0x222222 });
+        _this = _super.call(this, geometry, material) || this;
+        _this.scale.multiplyScalar(3);
+        console.timeEnd();
+        return _this;
+    }
+    return ArenaMap;
+}(THREE.Mesh));
+exports.default = ArenaMap;
 
 
 /***/ })

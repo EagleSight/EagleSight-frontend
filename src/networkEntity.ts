@@ -15,7 +15,7 @@ class NetworkEntity extends THREE.Object3D {
 
         this.matrixAutoUpdate = false;        
 
-        this.eulerOrder = 'YZX';
+        this.rotation.order = 'YZX';
     }
 
     updateFromNetwork(tick: number, data: DataView) {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import LocalPlayer from './localPlayer'
 import RemotePlayer from './remotePlayer'
 import NetworkEntity from './networkEntity'
+import ArenaMap from './arenaMap'
 
 var scene: THREE.Scene,
     renderer: THREE.WebGLRenderer;
@@ -20,26 +21,11 @@ var players = new Map<number, NetworkEntity>(); // Contains the players
 
 function generateTerrain(scene: THREE.Scene) {
 
-    // Here comes the cubes carpet
-    geometry = new THREE.BoxGeometry(200, 200, 200);
-
-    const d = 4000;
-    const root = 50;
-
-    for (var i = 0; i < root * root; i++) {
-
-        var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0x888888 + 0x777777 });
-
-        mesh = new THREE.Mesh(geometry, material);
-        mesh.matrixAutoUpdate = false;
-
-        mesh.position.x = Math.floor(i / root) * d;
-        mesh.position.z = (i % root) * -d;
-
-        mesh.updateMatrix();
-
-        scene.add(mesh);
-    }
+    fetch('/dist/map.esmap', {}).then(resp => {
+        return resp.arrayBuffer();
+    }).then(arr => {
+        scene.add(new ArenaMap(arr))
+    });
 }
 
 function setupWorld(scene: THREE.Scene) {
@@ -60,7 +46,7 @@ function setupWorld(scene: THREE.Scene) {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setClearColor(0x87CEFA);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(devicePixelRatio);
+    //renderer.setPixelRatio(devicePixelRatio);
 
     document.body.appendChild(renderer.domElement);
 

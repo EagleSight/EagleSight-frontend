@@ -107,7 +107,6 @@ export default
                 continue;
 
             if (Math.abs(high[i] - low[i]) >= axis.range) {
-                console.log(i);
 
                 axis = {
                     index: i,
@@ -168,8 +167,8 @@ export default
             'THRUST -> UP',
             'YAW -> RIGHT',
             'YAW -> LEFT',
-            'PITCH -> DOWN',
             'PITCH -> UP',
+            'PITCH -> DOWN',
             'ROLL -> RIGHT',
             'ROLL -> LEFT',
             'DONE ! Click one more time!',
@@ -300,7 +299,7 @@ export default
             callback({
                 thrust: t,
                 roll: r,
-                pitch: r,
+                pitch: p,
                 yaw: y / (y < 0 ? -this.map.thrustAxis.min : this.map.thrustAxis.max),
                 firePushed: device.buttons[this.map.fireButton].pressed,
                 talkPushed: device.buttons[this.map.talkButton].pressed

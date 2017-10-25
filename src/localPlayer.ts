@@ -44,8 +44,8 @@ export default
 
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
 
-        this.camera.position.y = 500;
-        this.camera.position.z = -2000;
+        this.camera.position.y = 2;
+        this.camera.position.z = -5;
 
         this.camera.rotation.y = -Math.PI;
         //this.camera.rotation.x = Math.PI / 5;
@@ -56,14 +56,18 @@ export default
 
         jsonLoader.load('dist/protoplane.json', (geometry: THREE.Geometry) => {
 
-            this.material = new THREE.MeshLambertMaterial({ color: 0x085b08, skinning: true });
+            this.material = new THREE.MeshLambertMaterial({ color: 0x085b08});
 
             this.plane = new THREE.SkinnedMesh(geometry, this.material);
+            
+            this.plane.scale.set(0.002,0.002,0.002);
 
             this.add(this.plane);
+
         });
 
         this.joystick = new JoystickInterface();
+
 
 
     }
@@ -167,8 +171,6 @@ export default
 
         // Gamepad logic here...
         this.joystick.update((inputs) => {
-            console.log(inputs.yaw);
-
 
             this.thrust = inputs.thrust * 255;
 
