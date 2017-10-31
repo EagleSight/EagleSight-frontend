@@ -44,8 +44,8 @@ export default
 
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
 
-        this.camera.position.y = 2;
-        this.camera.position.z = -5;
+        this.camera.position.y = 3;
+        this.camera.position.z = -10;
 
         this.camera.rotation.y = -Math.PI;
         //this.camera.rotation.x = Math.PI / 5;
@@ -60,7 +60,7 @@ export default
 
             this.plane = new THREE.SkinnedMesh(geometry, this.material);
             
-            this.plane.scale.set(0.002,0.002,0.002);
+            this.plane.scale.set(0.005,0.005,0.005);
 
             this.add(this.plane);
 

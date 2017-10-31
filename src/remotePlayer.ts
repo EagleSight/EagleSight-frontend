@@ -20,8 +20,10 @@ export default
 
             this.plane = new THREE.SkinnedMesh(geometry, this.material);
 
-            this.position.y = 500;
-            this.position.z = 500;
+            this.position.y = 100;
+            this.position.z = 300;
+
+            this.plane.scale.set(0.005,0.005,0.005);
 
             this.add(this.plane);
         });

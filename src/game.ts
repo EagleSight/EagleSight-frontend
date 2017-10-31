@@ -38,11 +38,8 @@ function setupWorld(scene: THREE.Scene) {
     scene.add((new THREE.HemisphereLight(0xccccff, 0x080808, 1)));
 
     scene.add((new THREE.AmbientLight(0x444444)));
-
-    var light = new THREE.DirectionalLight(0xeeeeee, 1);
-    light.rotation.set(4, 2, 0);
-    scene.add(light);
-
+    
+    
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setClearColor(0x87CEFA);
     renderer.setSize(window.innerWidth, window.innerHeight);

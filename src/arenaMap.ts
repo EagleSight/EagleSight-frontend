@@ -12,11 +12,7 @@ export default
         const
             width = sourceView.getUint16(0, true),
             depth = sourceView.getUint16(2, true),
-            distance = 30,// sourceView.getFloat32(6, true),
-            map_width = width * distance,
-            map_depth = depth * distance,
-            centerX = map_width / 2,
-            centerZ = map_depth / 2;
+            distance =  sourceView.getFloat32(6, true);
 
         console.log(width);
         console.log(depth);
@@ -34,18 +30,38 @@ export default
                 const p = r * width + c;
 
                 const
-                    RIGHT = (c + 1) * distance - centerX,
-                    LEFT = c * distance - centerX; // Where i is
+                    RIGHT = (c + 1) * distance,
+                    LEFT = c * distance; // Where i is
 
                 const
-                    UP = r * distance - centerZ,  // Where i is
-                    DOWN = (r + 1) * distance - centerZ;
+                    UP = r * distance,  // Where i is
+                    DOWN = (r + 1) * distance;
 
+                //    30------2
+                //    | \     |
+                //    |   \   |
+                //    |     \ |
+                //    4------51
                 vertices.set([
+
+                    // FIRST TRIANGLE
+
+                    // UP LEFT
+                    LEFT, // X
+                    pts[p], // Y
+                    UP, // Z
+
+                    // DOWN RIGHT
+                    RIGHT, // X
+                    pts[p + width + 1], // Y
+                    DOWN, // Z
+
                     // UP RIGHT
                     RIGHT, // X
                     pts[p + 1], // Y
                     UP, // Z
+
+                    // SECOND TRIANGLE
 
                     // UP LEFT
                     LEFT, // X
@@ -57,20 +73,11 @@ export default
                     pts[p + width], // Y
                     DOWN, // Z
 
-                    // DOWN LEFT
-                    LEFT, // X
-                    pts[p + width], // Y
-                    DOWN, // Z
-
                     // DOWN RIGHT
                     RIGHT, // X
                     pts[p + width + 1], // Y
                     DOWN, // Z
 
-                    // UP RIGHT
-                    RIGHT, // X
-                    pts[p + 1], // Y
-                    UP // Z
                 ], i * 9 * 2);
 
                 i++;
@@ -84,10 +91,9 @@ export default
 
         var material = new THREE.MeshLambertMaterial({ color: 0x222222 });
 
+        
         super(geometry, material);
-
-        this.scale.multiplyScalar(3);
-
+        
         console.timeEnd()
 
     }

@@ -144,37 +144,25 @@ var wsHost = 'ws://' + window.location.hostname + ':8000';
 var conn;
 var players = new Map(); // Contains the players
 function generateTerrain(scene) {
-    console.log('Loading map');
     fetch('/dist/map.esmap', {}).then(function (resp) {
         return resp.arrayBuffer();
     }).then(function (arr) {
         scene.add(new arenaMap_1.default(arr));
     });
-    // // Here comes the cubes carpet
-    // geometry = new THREE.BoxGeometry(400, 400, 400);
-    // const d = 8000;
-    // const root = 60;
-    // for (var i = 0; i < root * root; i++) {
-    //     var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0x888888 + 0x777777 });
-    //     mesh = new THREE.Mesh(geometry, material);
-    //     mesh.matrixAutoUpdate = false;
-    //     mesh.position.x = Math.floor(i / root) * d;
-    //     mesh.position.z = (i % root) * -d;
-    //     mesh.updateMatrix();
-    //     scene.add(mesh);
-    // }
 }
 function setupWorld(scene) {
     generateTerrain(scene);
     // Some lighting
     scene.add((new THREE.HemisphereLight(0xccccff, 0x080808, 1)));
     scene.add((new THREE.AmbientLight(0x444444)));
-    var light = new THREE.DirectionalLight(0xeeeeee, 1);
-    light.rotation.set(4, 2, 0);
+    var light = new THREE.DirectionalLight(0xeeeeee, 2);
+    light.rotation.set(0, 0, 0);
     scene.add(light);
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setClearColor(0x87CEFA);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
     //renderer.setPixelRatio(devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 }
@@ -284,8 +272,8 @@ var LocalPlayer = /** @class */ (function (_super) {
         _this.thrust = 0;
         _this.conn = conn;
         _this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
-        _this.camera.position.y = 2;
-        _this.camera.position.z = -5;
+        _this.camera.position.y = 3;
+        _this.camera.position.z = -10;
         _this.camera.rotation.y = -Math.PI;
         //this.camera.rotation.x = Math.PI / 5;
         _this.add(_this.camera);
@@ -293,7 +281,8 @@ var LocalPlayer = /** @class */ (function (_super) {
         jsonLoader.load('dist/protoplane.json', function (geometry) {
             _this.material = new THREE.MeshLambertMaterial({ color: 0x085b08 });
             _this.plane = new THREE.SkinnedMesh(geometry, _this.material);
-            _this.plane.scale.set(0.002, 0.002, 0.002);
+            _this.plane.scale.set(0.005, 0.005, 0.005);
+            _this.plane.castShadow = true;
             _this.add(_this.plane);
         });
         _this.joystick = new joystickInterface_1.default();
@@ -631,8 +620,9 @@ var RemotePlayer = /** @class */ (function (_super) {
         jsonLoader.load('dist/protoplane.json', function (geometry) {
             _this.material = new THREE.MeshLambertMaterial({ color: 0xf84b08 });
             _this.plane = new THREE.SkinnedMesh(geometry, _this.material);
-            _this.position.y = 500;
-            _this.position.z = 500;
+            _this.position.y = 100;
+            _this.position.z = 300;
+            _this.plane.scale.set(0.005, 0.005, 0.005);
             _this.add(_this.plane);
         });
         return _this;
@@ -666,8 +656,7 @@ var ArenaMap = /** @class */ (function (_super) {
         var _this = this;
         console.time();
         var sourceView = new DataView(source);
-        var width = sourceView.getUint16(0, true), depth = sourceView.getUint16(2, true), distance = 30, // sourceView.getFloat32(6, true),
-        map_width = width * distance, map_depth = depth * distance, centerX = map_width / 2, centerZ = map_depth / 2;
+        var width = sourceView.getUint16(0, true), depth = sourceView.getUint16(2, true), distance = sourceView.getFloat32(6, true);
         console.log(width);
         console.log(depth);
         console.log(distance);
@@ -677,14 +666,29 @@ var ArenaMap = /** @class */ (function (_super) {
         for (var r = 0; r < depth - 1; r++) {
             for (var c = 0; c < width - 1; c++) {
                 var p = r * width + c;
-                var RIGHT = (c + 1) * distance - centerX, LEFT = c * distance - centerX; // Where i is
-                var UP = r * distance - centerZ, // Where i is
-                DOWN = (r + 1) * distance - centerZ;
+                var RIGHT = (c + 1) * distance, LEFT = c * distance; // Where i is
+                var UP = r * distance, // Where i is
+                DOWN = (r + 1) * distance;
+                //    30------2
+                //    | \     |
+                //    |   \   |
+                //    |     \ |
+                //    4------51
                 vertices.set([
+                    // FIRST TRIANGLE
+                    // UP LEFT
+                    LEFT,
+                    pts[p],
+                    UP,
+                    // DOWN RIGHT
+                    RIGHT,
+                    pts[p + width + 1],
+                    DOWN,
                     // UP RIGHT
                     RIGHT,
                     pts[p + 1],
                     UP,
+                    // SECOND TRIANGLE
                     // UP LEFT
                     LEFT,
                     pts[p],
@@ -693,29 +697,20 @@ var ArenaMap = /** @class */ (function (_super) {
                     LEFT,
                     pts[p + width],
                     DOWN,
-                    // DOWN LEFT
-                    LEFT,
-                    pts[p + width],
-                    DOWN,
                     // DOWN RIGHT
                     RIGHT,
                     pts[p + width + 1],
                     DOWN,
-                    // UP RIGHT
-                    RIGHT,
-                    pts[p + 1],
-                    UP // Z
                 ], i * 9 * 2);
                 i++;
             }
         }
-        console.log('Map loaded');
         var geometry = new THREE.BufferGeometry();
         geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
         geometry.computeVertexNormals();
         var material = new THREE.MeshLambertMaterial({ color: 0x222222 });
         _this = _super.call(this, geometry, material) || this;
-        _this.scale.multiplyScalar(3);
+        _this.receiveShadow = true;
         console.timeEnd();
         return _this;
     }
