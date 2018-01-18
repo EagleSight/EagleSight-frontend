@@ -9,14 +9,10 @@ export default
 
         const sourceView = new DataView(source);
 
-        const
-            width = sourceView.getUint16(0, true),
-            depth = sourceView.getUint16(2, true),
-            distance =  sourceView.getFloat32(6, true);
+        const width = sourceView.getUint16(0, true),
+              depth = sourceView.getUint16(2, true),
+              distance =  sourceView.getFloat32(6, true);
 
-        console.log(width);
-        console.log(depth);
-        console.log(distance);
 
         const pts = new Int16Array(source, 2 + 2 + 2 + 4, width * depth);
 

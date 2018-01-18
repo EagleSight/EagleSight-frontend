@@ -30,7 +30,6 @@ function generateTerrain(scene: THREE.Scene) {
 
 function setupWorld(scene: THREE.Scene) {
 
-
     generateTerrain(scene);
 
 
