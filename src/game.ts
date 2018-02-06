@@ -18,7 +18,6 @@ var conn: WebSocket;
 var players = new Map<number, NetworkEntity>(); // Contains the players
 
 
-
 function SetUpTerrain(scene: THREE.Scene) {
 
     fetch('/dist/map.esmap', {}).then(resp => {
@@ -28,7 +27,7 @@ function SetUpTerrain(scene: THREE.Scene) {
     });
 }
 
-function setupWorld(scene: THREE.Scene) {
+function SetUpWorld(scene: THREE.Scene) {
 
     SetUpTerrain(scene);
 
@@ -133,7 +132,7 @@ export function init() {
 
     };
 
-    setupWorld(scene);
+    SetUpWorld(scene);
 
 }
 
