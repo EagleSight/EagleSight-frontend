@@ -3,13 +3,10 @@ import * as THREE from 'three';
 export default
 class NetworkEntity extends THREE.Object3D {
 
-    public uid: number;
     private lastTick: number;
 
-    constructor(uid: number) {
+    constructor() {
         super();
-
-        this.uid = uid;
 
         this.lastTick = 0;
 
@@ -18,16 +15,10 @@ class NetworkEntity extends THREE.Object3D {
         this.rotation.order = 'YZX';
     }
 
-    updateFromNetwork(tick: number, data: DataView) {
-
-        if (tick <= this.lastTick) {
-            return;
-        }
-
-        this.lastTick = tick;
+    updateFromNetwork(data: DataView) {
                 
-        this.position.set(data.getFloat32(4), data.getFloat32(8), data.getFloat32(12));
-        this.rotation.set(data.getFloat32(16), data.getFloat32(20), data.getFloat32(24));
+        this.position.set(data.getFloat32(3), data.getFloat32(7), data.getFloat32(11));
+        this.rotation.set(data.getFloat32(15), data.getFloat32(19), data.getFloat32(23));
 
         this.updateMatrix();
 

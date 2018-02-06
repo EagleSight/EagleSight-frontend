@@ -36,9 +36,9 @@ export default
     private thrust = 0;
 
 
-    constructor(uid: number, conn: WebSocket) {
+    constructor(conn: WebSocket) {
 
-        super(uid);
+        super();
 
         this.conn = conn;
 

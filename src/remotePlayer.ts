@@ -8,9 +8,9 @@ export default
     private material: THREE.MeshLambertMaterial;
     private plane: THREE.SkinnedMesh;
 
-    constructor(uid: number) {
+    constructor() {
 
-        super(uid);
+        super();
 
         var jsonLoader = new THREE.JSONLoader();
 

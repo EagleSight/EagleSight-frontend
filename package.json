@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Felix Beaulieu",
@@ -14,6 +15,7 @@
     "three": "^0.87.1",
     "three-obj-loader": "^1.1.2",
     "ts-loader": "^2.3.4",
-    "typescript": "^2.5.2"
+    "typescript": "^2.5.2",
+    "webpack": "^3.10.0"
   }
 }
