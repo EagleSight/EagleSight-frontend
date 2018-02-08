@@ -1,5 +1,5 @@
 {
-  "name": "iron-bird",
+  "name": "eaglesight-frontend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,11 +10,14 @@
   "author": "Felix Beaulieu",
   "license": "ISC",
   "dependencies": {
+    "@types/history": "^4.6.2",
     "@types/three": "^0.84.20",
+    "history": "^4.7.2",
+    "preact": "^8.2.7",
+    "preact-router": "^2.6.0",
     "source-map-loader": "^0.2.1",
     "three": "^0.87.1",
-    "three-obj-loader": "^1.1.2",
-    "ts-loader": "^2.3.4",
+    "ts-loader": "^3.4.0",
     "typescript": "^2.5.2",
     "webpack": "^3.10.0"
   }
