@@ -2,7 +2,7 @@
 
 module.exports = {
     devtool: 'inline-source-map',
-    entry: './src/main.ts',
+    entry: './src/index.tsx',
     output: { filename: 'dist/bundle.js' },
     module: {
         rules: [
