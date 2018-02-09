@@ -1,12 +1,12 @@
-import {h, Component} from 'preact'
-import {route} from 'preact-router'
+import { h, Component } from 'preact'
+import { route } from 'preact-router'
 
 interface CreatePartyModalState {
     open: boolean;
 }
 
 export default
-class CreatePartyModal extends Component<any, CreatePartyModalState> {
+    class CreatePartyModal extends Component<any, CreatePartyModalState> {
     constructor() {
         super()
 
@@ -24,27 +24,31 @@ class CreatePartyModal extends Component<any, CreatePartyModalState> {
     backgroundClick(e: any) {
         if (e.target.classList.contains('modal')) {
             this.state.open = false;
-    
+
             this.setState(this.state);
         }
     }
 
     createParty() {
-        // HTTP POST to /party, returns the new party UUID
+        fetch('/party', {
+            method: 'POST'
+        }).then(resp => resp.json()).then(json => {
+            route('/lobby/' + json.uuid)
+        })
     }
 
     render(props: any, state: CreatePartyModalState): any {
-        
+
         return <div>
             <button class="create-party" onClick={this.openModal.bind(this)}>
-            + Create a Party
-           </button>
-           <div class={'modal ' + (state.open ? 'open' : '')} onClick={this.backgroundClick.bind(this)}>
-            <div class="modal-body">
-                <h1>New Party!</h1>
-                <button>Create the party</button>
+                + Create a Party
+            </button>
+            <div class={'modal ' + (state.open ? 'open' : '')} onClick={this.backgroundClick.bind(this)}>
+                <div class="modal-body">
+                    <h1>New Party!</h1>
+                    <button onClick={this.createParty}>Create the party</button>
+                </div>
             </div>
-           </div>
         </div>;
     }
 }
