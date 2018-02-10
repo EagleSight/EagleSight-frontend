@@ -30,10 +30,10 @@ export default
     }
 
     createParty() {
-        fetch('/party', {
+        fetch('/api/party', {
             method: 'POST'
         }).then(resp => resp.json()).then(json => {
-            route('/lobby/' + json.uuid)
+            route('/party/' + json.uuid)
         })
     }
 
@@ -41,7 +41,7 @@ export default
 
         return <div>
             <button class="create-party" onClick={this.openModal.bind(this)}>
-                + Create a Party
+                + Create a party
             </button>
             <div class={'modal ' + (state.open ? 'open' : '')} onClick={this.backgroundClick.bind(this)}>
                 <div class="modal-body">

@@ -21,7 +21,7 @@ class Lobby extends Component<any, LobbyState> {
     }
     
     componentWillMount() {
-        this.ws = new WebSocket('ws://' + window.location.hostname + ':1323/lobby/ws')
+        this.ws = new WebSocket('ws://' + window.location.host + '/ws/lobby')
 
         this.ws.onmessage = (e) => {
             this.state.parties = JSON.parse(e.data);
@@ -47,12 +47,10 @@ class Lobby extends Component<any, LobbyState> {
 
     render(): any {
 
-        const options = this.displayParties()
-
         return <div class="lobby">
            <h3 class="title">All open parties</h3>
            <div class="parties-grid">
-           {options}
+           {this.displayParties()}
            </div>
            <CreatePartyModal/>
         </div>;

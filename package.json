@@ -4,21 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "node_modules/.bin/webpack-dev-server --inline",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Felix Beaulieu",
   "license": "ISC",
   "dependencies": {
-    "@types/history": "^4.6.2",
-    "@types/three": "^0.84.20",
+    "axios": "^0.17.1",
     "history": "^4.7.2",
     "preact": "^8.2.7",
     "preact-router": "^2.6.0",
+    "three": "^0.87.1"
+  },
+  "devDependencies": {
     "source-map-loader": "^0.2.1",
-    "three": "^0.87.1",
-    "ts-loader": "^3.4.0",
+    "@types/history": "^4.6.2",
+    "@types/three": "^0.84.20",
     "typescript": "^2.5.2",
-    "webpack": "^3.10.0"
+    "webpack": "^3.10.0",
+    "ts-loader": "^3.4.0",
+    "webpack-dev-server": "^2.11.1"
   }
 }

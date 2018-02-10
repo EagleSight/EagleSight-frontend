@@ -7,7 +7,7 @@ body {
     -webkit-user-select: none;
     -ms-user-select: none;
 
-    background-color: #111;
+    background-color: #000000;
     color: orange;
     width: 100%;
     margin: 0;
@@ -86,7 +86,7 @@ h3.title {
 
 @font-face {
     font-family: 'Kroftsmann';
-    src: url('./Kroftsmann.ttf');
+    src: url('../font/Kroftsmann.ttf');
 }
 
 

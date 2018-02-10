@@ -1,6 +1,6 @@
+import { h, render } from 'preact';
 import { Router } from 'preact-router';
 import createHashHistory from 'history/createHashHistory';
-import { h, render } from 'preact';
 
 import Login from "./components/login";
 import Lobby from "./components/lobby";

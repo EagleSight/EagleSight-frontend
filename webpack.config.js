@@ -1,9 +1,14 @@
 'use strict';
 
+const path = require('path');
+
 module.exports = {
     devtool: 'inline-source-map',
     entry: './src/index.tsx',
-    output: { filename: 'dist/bundle.js' },
+    output: {
+        path: path.resolve(__dirname, "dist"),
+        filename: path.join('static', 'js', 'app.js') 
+    },
     module: {
         rules: [
             {
@@ -16,7 +21,19 @@ module.exports = {
     resolve: {
         extensions: [ '.ts', '.tsx', '.js' ]
     },
-    externals: {
-        "three": "THREE"
+    devServer: {
+        publicPath: '/',
+        contentBase: path.join(__dirname, "dist"),
+        port: 3000,
+        proxy: {
+            "/api": {
+                target: "http://localhost:1323",
+            },
+            "/ws": {
+                target: "http://localhost:1323",
+                ws: true
+            }
+        }
     },
+    watch: true
 };
