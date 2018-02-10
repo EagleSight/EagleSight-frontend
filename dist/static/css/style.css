@@ -56,9 +56,16 @@ h3.title {
     color :white;
 }
 
+select {
+    padding: 5px;
+    font-size: 18px;
+    width: 300px;
+}
+
 /**************  Modal  *******************/
 
 .modal {
+    
     background-color: rgba(0.1, 0.1, 0.1, 0.5);
     position: fixed;
     top: 0;
@@ -73,12 +80,13 @@ h3.title {
 }
 
 .modal > .modal-body {
-    background-color: #555;
-    position: fixed;
-    top: 80px;
-    right: 80px;
-    left: 80px;
-    padding: 25px;
+    display: inline-block;
+    background-color: #333;
+    width: 500px;
+    margin-top: 80px;
+    margin-left:auto;
+    margin-right: auto;
+    padding: 0 25px 25px 25px;
     border-radius: 5px;
 }
 
@@ -88,7 +96,6 @@ h3.title {
     font-family: 'Kroftsmann';
     src: url('../font/Kroftsmann.ttf');
 }
-
 
 button.login {
     width: 200px;

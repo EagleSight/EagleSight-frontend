@@ -35,9 +35,6 @@ class Lobby extends Component<any, LobbyState> {
             return <div class="loading"></div>
         }
 
-        console.log(this.state.parties);
-        console.log(this.state.parties == []);
-
         if (this.state.parties instanceof Array && this.state.parties.length === 0) {
             return <span class="white">There are no open parties for the moment</span>
         }
