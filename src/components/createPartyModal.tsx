@@ -81,11 +81,11 @@ export default
         this.state.creationInProgress = true;
         this.setState(this.state, () => {
 
-            api.party.Create()
+            api.party.Create(this.state.partyParameters)
             .then(resp => {
-                
+
                 if (resp.status === 201) { // Created
-                    route('/party/' + resp.data.uuid, true)
+                    route('/party/' + resp.data.id, true)
                 }
 
                 this.state.creationInProgress = false;
