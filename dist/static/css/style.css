@@ -150,3 +150,38 @@ button.create-party {
     right: 30px;
 }
 
+.party-entry:hover {
+    background-color: #1d1d1d;
+}
+
+
+.party-entry {
+    border: orange 1px solid;
+    border-radius: 5px;
+    width: 200px;
+    margin: 1em;
+    padding: 10px;
+    background-color: #222;
+    color: white;
+    display: inline-block;
+    text-align: center;
+    font-size: 20px;
+}
+
+.party-entry .red,
+.party-entry .blue,
+.party-entry .no-team {
+    width: 33%;
+    display: inline-block;
+}
+
+.party-entry .red {
+    color: red;
+}
+
+.party-entry .blue {
+    color: lightskyblue;
+}
+
+.party-entry .no-team {
+}

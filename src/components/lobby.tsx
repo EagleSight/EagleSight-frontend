@@ -39,7 +39,25 @@ class Lobby extends Component<any, LobbyState> {
             return <span class="white">There are no open parties for the moment</span>
         }
 
-        return <span class="white">{JSON.stringify(this.state.parties)}</span>
+        return this.state.parties.sort((a, b) => 
+            1
+        ).reverse().map(v => {
+            return <div class="party-entry" onClick={this.goToWaitingRoom.bind(this, v.id)}>
+                {v.terrain} ({v.seats})
+                <br/>
+                <br/>
+                <div>
+                    <div class="blue">{v.A}</div>
+                    <div class="no-team">{v.noteam}</div>
+                    <div class="red">{v.B}</div>
+                </div>
+            </div>
+        });
+    }
+
+    goToWaitingRoom(id: string) {
+        console.log(id);
+        route('/party/' + id, true);
     }
 
     render(): any {
