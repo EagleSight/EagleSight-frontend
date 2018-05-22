@@ -6,16 +6,11 @@ import JoystickInterface from './joystickInterface'
 export default
     class LocalPlayer extends NetworkEntity {
 
-    public conn: WebSocket;
-
     private material: THREE.MeshLambertMaterial;
     public camera: THREE.PerspectiveCamera;
     private plane: THREE.SkinnedMesh;
 
     private joystick: JoystickInterface;
-
-    private timeLastUpdate: number = (new Date()).getTime();
-
 
     private direction = {
         pitch: 0,
@@ -36,11 +31,9 @@ export default
     private thrust = 0;
 
 
-    constructor(conn: WebSocket) {
+    constructor() {
 
         super();
-
-        this.conn = conn;
 
         this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
 
@@ -54,7 +47,7 @@ export default
 
         var jsonLoader = new THREE.JSONLoader();
 
-        jsonLoader.load('dist/protoplane.json', (geometry: THREE.Geometry) => {
+        jsonLoader.load('/protoplane.json', (geometry: THREE.Geometry) => {
 
             this.material = new THREE.MeshLambertMaterial({ color: 0x085b08});
 
@@ -68,10 +61,7 @@ export default
 
         this.joystick = new JoystickInterface();
 
-
-
     }
-
 
     keyDown(e: KeyboardEvent) {
 
@@ -145,13 +135,13 @@ export default
 
     }
 
-    updateNetwork() {
+    public SendState(conn: WebSocket) {
 
-        if (this.conn.readyState != 1) { // We don't want to transmit
+        if (conn.readyState != 1) { // We don't want to transmit
             return;
         }
 
-        var state = new ArrayBuffer(5);
+        var state = new ArrayBuffer(6);
         var view = new DataView(state);
 
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
@@ -160,14 +150,13 @@ export default
         view.setInt8(2, this.direction.pitch);
         view.setInt8(3, this.direction.yaw);
         view.setUint8(4, this.thrust);
+        view.setUint8(5, 0);
 
 
-        this.conn.send(view.buffer);
-
+        conn.send(view.buffer);
     }
 
-
-    update() {
+    public ProcessInput() {
 
         // Gamepad logic here...
         this.joystick.update((inputs) => {
@@ -179,8 +168,6 @@ export default
             this.direction.yaw = inputs.yaw * 127;
 
         });
-
-        this.updateNetwork();
 
     }
 

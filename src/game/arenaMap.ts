@@ -3,6 +3,14 @@ import * as THREE from 'three';
 export default
     class ArenaMap extends THREE.Mesh {
 
+    static LoadIntoScene(url: string, scene: THREE.Scene) {
+        fetch(url, {}).then(resp => {
+            return resp.arrayBuffer();
+        }).then(arr => {
+            scene.add(new ArenaMap(arr))
+        });
+    }
+
     constructor(source: ArrayBuffer) {
 
         console.time()

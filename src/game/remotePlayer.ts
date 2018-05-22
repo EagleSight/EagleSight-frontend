@@ -14,7 +14,7 @@ export default
 
         var jsonLoader = new THREE.JSONLoader();
 
-        jsonLoader.load('dist/protoplane.json', (geometry: THREE.Geometry) => {
+        jsonLoader.load('/protoplane.json', (geometry: THREE.Geometry) => {
 
             this.material = new THREE.MeshLambertMaterial({ color: 0xf84b08});
 

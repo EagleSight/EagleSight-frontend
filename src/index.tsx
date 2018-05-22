@@ -5,11 +5,13 @@ import createHashHistory from 'history/createHashHistory';
 import Login from "./components/login";
 import Lobby from "./components/lobby";
 import Party from "./components/party";
+import GameView from "./components/game"
 
 
 const Main = () => (
 <div>
   <Router history={createHashHistory()}>
+    <GameView path="/game/:id/:uuid"/>
     <Party path="/party/:id"/>
     <Lobby path="/lobby" />
     <Login default/>
