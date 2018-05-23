@@ -3,6 +3,8 @@ import NetworkEntity from './networkEntity'
 import JoystickInterface from './joystickInterface'
 
 
+const InputMessageSize = 6;
+
 export default
     class LocalPlayer extends NetworkEntity {
 
@@ -11,6 +13,10 @@ export default
     private plane: THREE.SkinnedMesh;
 
     private joystick: JoystickInterface;
+
+    private lastInputsSent: Uint8Array;
+
+    private thrust = 0;
 
     private direction = {
         pitch: 0,
@@ -27,9 +33,6 @@ export default
         yawDown: 39, // Arrow Right
         thrustUp: 32 // Space bare
     }
-
-    private thrust = 0;
-
 
     constructor() {
 
@@ -49,17 +52,19 @@ export default
 
         jsonLoader.load('/protoplane.json', (geometry: THREE.Geometry) => {
 
-            this.material = new THREE.MeshLambertMaterial({ color: 0x085b08});
+            this.material = new THREE.MeshLambertMaterial({ color: 0x085b08 });
 
             this.plane = new THREE.SkinnedMesh(geometry, this.material);
-            
-            this.plane.scale.set(0.005,0.005,0.005);
+
+            this.plane.scale.set(0.005, 0.005, 0.005);
 
             this.add(this.plane);
 
         });
 
         this.joystick = new JoystickInterface();
+
+        this.lastInputsSent = new Uint8Array(InputMessageSize);
 
     }
 
@@ -141,19 +146,32 @@ export default
             return;
         }
 
-        var state = new ArrayBuffer(6);
+        var state = new ArrayBuffer(InputMessageSize);
         var view = new DataView(state);
 
         view.setUint8(0, 0x3); // 0x3 is the instruction number for "move entity"
-
         view.setInt8(1, this.direction.roll);
         view.setInt8(2, this.direction.pitch);
         view.setInt8(3, this.direction.yaw);
         view.setUint8(4, this.thrust);
-        view.setUint8(5, 0);
+        view.setUint8(5, 0); // Firing is coming here
 
+        if (this.inputsHaveChanged(view)) {
+            conn.send(view.buffer);
+        }
+    }
 
-        conn.send(view.buffer);
+    private inputsHaveChanged(view: DataView): boolean {
+
+        // Compare the last input sent, bytes by bytes.
+        for (var i = 1; i < this.lastInputsSent.byteLength; i++) {
+            if (this.lastInputsSent[i] != view.getUint8(i)) {
+               this.lastInputsSent = new Uint8Array(view.buffer);
+               return true;
+            }
+        }
+
+        return false;
     }
 
     public ProcessInput() {
