@@ -73,9 +73,9 @@ export default class Game {
                 }
 
                 // Receive a lot of updates in the same packet
-                for (var i = 0; i < (data.byteLength - 1) / 26; i++) {
+                for (var i = 0; i < Math.floor((data.byteLength - 1) / 30); i++) {
 
-                    const updateFrame = new DataView(message, 1 + i * (2 + 4 * 6), (2 + 3 * 4 + 4 * 4));
+                    const updateFrame = new DataView(message, 1 + i * (2 + 7 * 4), (2 + 3 * 4 + 4 * 4));
 
                     const playerUID = updateFrame.getUint8(0);
 
