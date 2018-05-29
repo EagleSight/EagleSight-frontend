@@ -38,9 +38,9 @@ export default
 
         super();
 
-        this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 500000);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 500000);
 
-        this.camera.position.y = 3;
+        this.camera.position.y = 1;
         this.camera.position.z = -10;
 
         this.camera.rotation.y = -Math.PI;
